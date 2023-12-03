@@ -45,7 +45,7 @@ def main():
     with grpc.insecure_channel(server_address) as channel:
         stub = tetra3_pb2_grpc.Tetra3Stub(channel)
 
-        # Do a first call to warm up the connection; add timing around the second call..
+        # Do a first call to warm up the connection; add timing around a second call.
         discard = stub.SolveFromCentroids(request, timeout=10)
 
         start = time.perf_counter()

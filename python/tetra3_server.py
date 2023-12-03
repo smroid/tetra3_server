@@ -127,11 +127,15 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
 
         if ra_list is not None:
             assert dec_list is not None
+            if len(target_pixel) == 1:
+                ra_list = [ra_list]
+                dec_list = [dec_list]
             assert len(ra_list) == len(dec_list)
             for i in range(len(ra_list)):
                 target_coord = result.target_coords.add()
                 target_coord.ra = ra_list[i]
                 target_coord.dec = dec_list[i]
+
         if matched_stars_list is not None:
             assert matched_centroids_list is not None
             assert len(matched_stars_list) == len(matched_centroids_list)
