@@ -2,6 +2,10 @@ syntax = "proto3";
 
 package tetra3_server;
 
+import "google/protobuf/duration.proto";
+
+// python -m grpc_tools.protoc -I../proto --python_out=. --pyi_out=. --grpc_python_out=. ../proto/tetra3.proto
+
 // See documentation for Tetra3's solve_from_centroids() function for a
 // description of the request and response fields.
 
@@ -22,18 +26,19 @@ message SolveRequest {
 }
 
 message SolveResult {
-  CelestialCoord image_center_coords = 1;
-  float roll = 2;
-  float fov = 3;
+  optional CelestialCoord image_center_coords = 1;
+  optional float roll = 2;
+  optional float fov = 3;
   optional float distortion = 4;
-  float rmse = 5;
-  int32 matches = 6;
-  float prob = 7;
+  optional float rmse = 5;
+  optional int32 matches = 6;
+  optional float prob = 7;
   optional float epoch_equinox = 8;
   optional float epoch_proper_motion = 9;
   google.protobuf.Duration solve_time = 10;
-  repeated CelestialCoord target_coords = 11;
-  repeated MatchedStar matched_stars = 12;
+  optional float cache_hit_fraction = 11;
+  repeated CelestialCoord target_coords = 12;
+  repeated MatchedStar matched_stars = 13;
 }
 
 message ImageCoord {
