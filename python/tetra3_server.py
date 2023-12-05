@@ -90,7 +90,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         roll = result_dict.get('Roll', None)
         fov = result_dict.get('FOV', None)
         distortion = result_dict.get('distortion', None)
-        rmse = result_dict.get('rmse', None)
+        rmse = result_dict.get('RMSE', None)
         matches = result_dict.get('Matches', None)
         prob = result_dict.get('Prob', None)
         epoch_equinox = result_dict.get('epoch_equinox', None)
@@ -163,13 +163,14 @@ def startServer():
     ap = argparse.ArgumentParser(
         description='Runs gRPC server to plate-solve a list of star locations in ' \
         'an image to the celestial coordinates of the image.')
-    ap.add_argument('-p', '--port', type=int, default=50051, help='port to listen on')
+    ap.add_argument('-a', '--address', default='unix:///home/pi/tetra3.sock',
+                    help='address to listen on')
     ap.add_argument('filename', help='name of database file in tetra3/data directory')
     args = ap.parse_args()
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     tetra3_pb2_grpc.add_Tetra3Servicer_to_server(Tetra3Servicer(args.filename), server)
-    server.add_insecure_port('[::]:%d' % args.port)
+    server.add_insecure_port(args.address)
     server.start()
     server.wait_for_termination()
 

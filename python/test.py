@@ -9,7 +9,8 @@ import tetra3_pb2_grpc
 
 def main():
     ap = argparse.ArgumentParser(description='Test gRPC client exercise plate-solver')
-    ap.add_argument('-p', '--port', type=int, default=50051, help='port to connect to')
+    ap.add_argument('-a', '--address', default='unix:///home/pi/tetra3.sock',
+                    help='address to connect to')
     args = ap.parse_args()
 
     logger = logging.getLogger('test')
@@ -38,10 +39,11 @@ def main():
         image_coord.y = c[0]
     request.image_width = 1024
     request.image_height = 768
+    request.distortion = 0
     request.fov_estimate = 11
     # request.match_max_error = 0.005
 
-    server_address = 'localhost:%d' % args.port
+    server_address = args.address
     with grpc.insecure_channel(server_address) as channel:
         stub = tetra3_pb2_grpc.Tetra3Stub(channel)
 
