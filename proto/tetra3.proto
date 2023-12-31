@@ -46,6 +46,8 @@ message SolveResult {
   optional string failure_reason = 14;
 }
 
+// A location in full resolution image coordinates. (0.5, 0.5) corresponds to
+// the center of the image's upper left pixel.
 message ImageCoord {
   float x = 1;
   float y = 2;
