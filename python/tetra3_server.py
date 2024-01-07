@@ -17,10 +17,6 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
 
     def SolveFromCentroids(self, request, context):
         start = time.perf_counter()
-        # Pick up the RPC deadline.
-        time_remaining = context.time_remaining()
-        if time_remaining is None:
-            time_remaining = 1.0
 
         # Convert the request fields for call to Tetra3 solve_from_centroids()
         # function.
@@ -50,7 +46,11 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         if request.HasField('match_threshold'):
             match_threshold = request.match_threshold
 
-        solve_timeout_ms = time_remaining * 1000
+        solve_timeout_ms = None
+        if request.HasField('solve_timeout'):
+            st = request.solve_timeout
+            timeout = st.seconds + st.nanos / 1000000000
+            solve_timeout_ms = timeout * 1000
 
         target_pixel = []
         for tp in request.target_pixels:
