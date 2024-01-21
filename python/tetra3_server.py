@@ -34,10 +34,6 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         if request.HasField('fov_max_error'):
             fov_max_error = request.fov_max_error
 
-        pattern_checking_stars = 8
-        if request.HasField('pattern_checking_stars'):
-            pattern_checking_stars = request.pattern_checking_stars
-
         match_radius = 0.01
         if request.HasField('match_radius'):
             match_radius = request.match_radius
@@ -78,7 +74,6 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
                 star_centroids, size,
                 fov_estimate=fov_estimate,
                 fov_max_error=fov_max_error,
-                pattern_checking_stars=pattern_checking_stars,
                 match_radius=match_radius,
                 match_threshold=match_threshold,
                 solve_timeout=solve_timeout_ms,
