@@ -2,6 +2,7 @@ import argparse
 from concurrent import futures
 import grpc
 import logging
+import signal
 import time
 
 import tetra3_pb2
@@ -64,24 +65,19 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         if request.HasField('match_max_error'):
             match_max_error = request.match_max_error
 
-        failure_reason = None
-        if len(star_centroids) < 4:
-            failure_reason = 'Too few centroids, got %d but need at least 4' % len(star_centroids)
-            result_dict = {}
-        else:
-            # Process the request
-            result_dict = self._tetra3.solve_from_centroids(
-                star_centroids, size,
-                fov_estimate=fov_estimate,
-                fov_max_error=fov_max_error,
-                match_radius=match_radius,
-                match_threshold=match_threshold,
-                solve_timeout=solve_timeout_ms,
-                target_pixel=target_pixel,
-                distortion=distortion,
-                return_matches=return_matches,
-                return_visual=False,
-                match_max_error=match_max_error)
+        # Process the request
+        result_dict = self._tetra3.solve_from_centroids(
+            star_centroids, size,
+            fov_estimate=fov_estimate,
+            fov_max_error=fov_max_error,
+            match_radius=match_radius,
+            match_threshold=match_threshold,
+            solve_timeout=solve_timeout_ms,
+            target_pixel=target_pixel,
+            distortion=distortion,
+            return_matches=return_matches,
+            return_visual=False,
+            match_max_error=match_max_error)
 
         result = tetra3_pb2.SolveResult()
         # Populate result proto from Tetra3 result dict.
@@ -101,13 +97,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         matched_stars_list = result_dict.get('matched_stars', None)
         matched_centroids_list = result_dict.get('matched_centroids', None)
         matched_cat_id_list = result_dict.get('matched_catID', None)
-
-        if failure_reason is None and ra is None:
-            # TODO(smr): get more information from Tetra3 about solve failure:
-            # * no pattern match
-            # * pattern(s) match, but verification fails
-            # what else?
-            failure_reason = 'Tetra3 solve failure'
+        status = result_dict.get('status', None)
 
         if ra is not None:
             result.image_center_coords.ra = ra
@@ -162,11 +152,20 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         result.solve_time.seconds = int(elapsed)
         elapsed_frac = elapsed - int(elapsed)
         result.solve_time.nanos = int(elapsed_frac * 1000000000)
-        if failure_reason is not None:
-            result.failure_reason = failure_reason
+        if status is not None:
+            result.status = status
 
         return result
 
+    def CancelSolve(self):
+        self._tetra3.cancel_solve()
+
+
+servicer = None
+
+def signal_handler(sig, frame):
+    global servicer
+    servicer.CancelSolve()
 
 def startServer():
     ap = argparse.ArgumentParser(
@@ -178,11 +177,14 @@ def startServer():
     args = ap.parse_args()
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    tetra3_pb2_grpc.add_Tetra3Servicer_to_server(Tetra3Servicer(args.filename), server)
+    global servicer
+    servicer = Tetra3Servicer(args.filename)
+    tetra3_pb2_grpc.add_Tetra3Servicer_to_server(servicer, server)
     server.add_insecure_port(args.address)
     server.start()
     server.wait_for_termination()
 
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal_handler)
     startServer()
