@@ -56,7 +56,7 @@ message SolveResult {
   // Image coordinates of SolveRequest.target_sky_coords. If a request's
   // target_sky_coords entry is outside of the FOV, the corresponding
   // entry here will be (-1,-1).
-  repeated ImageCoord target_sky_to_image_coords_ = 15;
+  repeated ImageCoord target_sky_to_image_coords = 15;
 
   repeated MatchedStar matched_stars = 13;
 

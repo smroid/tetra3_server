@@ -57,7 +57,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
 
         target_sky_coord = []
         for tsc in request.target_sky_coords:
-            target_sky_coord.append((tsc.y, tsc.x))
+            target_sky_coord.append((tsc.ra, tsc.dec))
         if len(target_sky_coord) == 0:
             target_sky_coord = None
 
