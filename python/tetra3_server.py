@@ -55,6 +55,12 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         if len(target_pixel) == 0:
             target_pixel = None
 
+        target_sky_coord = []
+        for tsc in request.target_sky_coords:
+            target_sky_coord.append((tsc.y, tsc.x))
+        if len(target_sky_coord) == 0:
+            target_sky_coord = None
+
         distortion = None
         if request.HasField('distortion'):
             distortion = request.distortion
@@ -74,6 +80,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
             match_threshold=match_threshold,
             solve_timeout=solve_timeout_ms,
             target_pixel=target_pixel,
+            target_sky_coord=target_sky_coord,
             distortion=distortion,
             return_matches=return_matches,
             return_visual=False,
@@ -94,6 +101,8 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         cache_hit_fraction = result_dict.get('cache_hit_fraction', None)
         ra_list = result_dict.get('RA_target', None)
         dec_list = result_dict.get('Dec_target', None)
+        x_list = result_dict.get('x_target', None)
+        y_list = result_dict.get('y_target', None)
         matched_stars_list = result_dict.get('matched_stars', None)
         matched_centroids_list = result_dict.get('matched_centroids', None)
         matched_cat_id_list = result_dict.get('matched_catID', None)
@@ -132,6 +141,21 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
                 target_coord = result.target_coords.add()
                 target_coord.ra = ra_list[i]
                 target_coord.dec = dec_list[i]
+
+        if x_list is not None:
+            assert y_list is not None
+            if len(target_sky_coord) == 1:
+                x_list = [x_list]
+                y_list = [y_list]
+            assert len(x_list) == len(y_list)
+            for i in range(len(x_list)):
+                target_sky_to_image_coord = result.target_sky_to_image_coords.add()
+                if x_list[i] is None:
+                    target_sky_to_image_coord.x = -1
+                    target_sky_to_image_coord.y = -1
+                else:
+                    target_sky_to_image_coord.x = x_list[i]
+                    target_sky_to_image_coord.y = y_list[i]
 
         if matched_stars_list is not None:
             assert matched_centroids_list is not None
