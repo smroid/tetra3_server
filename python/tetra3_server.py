@@ -105,6 +105,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         y_list = result_dict.get('y_target', None)
         matched_stars_list = result_dict.get('matched_stars', None)
         matched_centroids_list = result_dict.get('matched_centroids', None)
+        pattern_centroids_list = result_dict.get('pattern_centroids', None)
         matched_cat_id_list = result_dict.get('matched_catID', None)
         status = result_dict.get('status', None)
 
@@ -171,6 +172,11 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
                 matched_star.image_coord.x = matched_centroids_list[i][1]
                 if matched_cat_id_list is not None:
                     matched_star.cat_id = '%s' % matched_cat_id_list[i]
+        if pattern_centroids_list is not None:
+            for i in range(len(pattern_centroids_list)):
+                pattern_centroid = result.pattern_centroids.add()
+                pattern_centroid.y = pattern_centroids_list[i][0]
+                pattern_centroid.x = pattern_centroids_list[i][1]
 
         elapsed = time.perf_counter() - start
         result.solve_time.seconds = int(elapsed)
