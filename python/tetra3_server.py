@@ -201,7 +201,7 @@ def startServer():
     ap = argparse.ArgumentParser(
         description='Runs gRPC server to plate-solve a list of star locations in ' \
         'an image to the celestial coordinates of the image.')
-    ap.add_argument('-a', '--address', default='unix:///home/pi/tetra3.sock',
+    ap.add_argument('-a', '--address', default='unix:///tmp/cedar.sock',
                     help='address to listen on')
     ap.add_argument('filename', help='name of database file in tetra3/data directory')
     args = ap.parse_args()
