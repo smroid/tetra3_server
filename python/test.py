@@ -6,10 +6,14 @@ import time
 import tetra3_pb2
 import tetra3_pb2_grpc
 
+WIDTH=1024
+HEIGHT=768
+DISTORTION=0
+FOV=11
 
 def main():
     ap = argparse.ArgumentParser(description='Test gRPC client exercise plate-solver')
-    ap.add_argument('-a', '--address', default='unix:///home/pi/tetra3.sock',
+    ap.add_argument('-a', '--address', default='unix:///tmp/cedar.sock',
                     help='address to connect to')
     args = ap.parse_args()
 
@@ -32,33 +36,55 @@ def main():
                  (147.357,   10.334), ( 32.093, 135.451), ( 35.331,  607.451),
                  (268.499,  574.395), (501.656, 639.474), (495.555,  269.554),
                  (555.537,  375.461), (628.456, 101.276)]
-    request = tetra3_pb2.SolveRequest()
+    solve_req = tetra3_pb2.SolveRequest()
     for c in centroids:
-        image_coord = request.star_centroids.add()
+        image_coord = solve_req.star_centroids.add()
         image_coord.x = c[1]
         image_coord.y = c[0]
-    request.image_width = 1024
-    request.image_height = 768
-    request.distortion = 0
-    request.fov_estimate = 11
-    # request.match_max_error = 0.005
+    solve_req.image_width = WIDTH
+    solve_req.image_height = HEIGHT
+    solve_req.distortion = DISTORTION
+    solve_req.fov_estimate = FOV
+    # solve_req.match_max_error = 0.005
+    solve_req.return_rotation_matrix = True
 
     server_address = args.address
     with grpc.insecure_channel(server_address) as channel:
         stub = tetra3_pb2_grpc.Tetra3Stub(channel)
 
         # Do a first call to warm up the connection; add timing around a second call.
-        discard = stub.SolveFromCentroids(request, timeout=10)
+        discard = stub.SolveFromCentroids(solve_req, timeout=10)
 
         start = time.perf_counter()
-        response = stub.SolveFromCentroids(request, timeout=10)
+        solve_response = stub.SolveFromCentroids(solve_req, timeout=10)
         elapsed = time.perf_counter() - start
 
-        print('Reponse: %s' % response)
-        solve_time = response.solve_time.seconds + response.solve_time.nanos / 1000000000
+        print('Solve reponse: %s' % solve_response)
+        solve_time = solve_response.solve_time.seconds + solve_response.solve_time.nanos / 1000000000
         rpc_overhead = elapsed - solve_time
         print('Time total=solve+RPC %.2f=%.2f+%.2f ms' %
               (elapsed * 1000, solve_time * 1000, rpc_overhead * 1000))
+
+        # Play with functions to transform between image coordinates and celestial coordinates
+        # based on a plate solution.
+        transform_req = tetra3_pb2.TransformRequest()
+        transform_req.rotation_matrix.matrix_elements.extend(solve_response.rotation_matrix.matrix_elements)
+        transform_req.image_width = WIDTH
+        transform_req.image_height = HEIGHT
+        transform_req.distortion = 0.1
+        transform_req.fov = FOV
+        image_coords = transform_req.image_coords.add()
+        image_coords.x = 10
+        image_coords.y = 20
+        transform_response = stub.TransformCoordinates(transform_req)
+        print('Transform reponse: %s' % transform_response)
+
+        # Now transform back to image coords.
+        celestial_coords = transform_req.celestial_coords.add()
+        celestial_coords.ra = transform_response.celestial_coords[0].ra
+        celestial_coords.dec = transform_response.celestial_coords[0].dec
+        transform_response = stub.TransformCoordinates(transform_req)
+        print('Transform reponse: %s' % transform_response)
 
 
 if __name__ == "__main__":

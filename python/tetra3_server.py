@@ -66,6 +66,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
             distortion = request.distortion
 
         return_matches = request.return_matches
+        return_rotation_matrix = request.return_rotation_matrix
 
         match_max_error = None
         if request.HasField('match_max_error'):
@@ -84,6 +85,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
             distortion=distortion,
             return_matches=return_matches,
             return_visual=False,
+            return_rotation_matrix=return_rotation_matrix,
             match_max_error=match_max_error)
 
         result = tetra3_pb2.SolveResult()
@@ -107,6 +109,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         matched_centroids_list = result_dict.get('matched_centroids', None)
         pattern_centroids_list = result_dict.get('pattern_centroids', None)
         matched_cat_id_list = result_dict.get('matched_catID', None)
+        rotation_matrix = result_dict.get('rotation_matrix', None)
         status = result_dict.get('status', None)
 
         if ra is not None:
@@ -178,6 +181,11 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
                 pattern_centroid.y = pattern_centroids_list[i][0]
                 pattern_centroid.x = pattern_centroids_list[i][1]
 
+        if rotation_matrix is not None:
+            # Flatten the matrix to a 1-d array.
+            flattened = [j for sub in rotation_matrix for j in sub]
+            result.rotation_matrix.matrix_elements.extend(flattened);
+
         elapsed = time.perf_counter() - start
         result.solve_time.seconds = int(elapsed)
         elapsed_frac = elapsed - int(elapsed)
@@ -190,12 +198,54 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
     def CancelSolve(self):
         self._tetra3.cancel_solve()
 
+    def TransformCoordinates(self, request, context):
+        flattened_matrix = request.rotation_matrix.matrix_elements
+        # Convert to 3x3.
+        rotation_matrix = []
+        i = 0
+        for r in range(3):
+            row = []
+            for c in range(3):
+                row.append(flattened_matrix[i])
+                i += 1
+            rotation_matrix.append(row)
+
+        result = tetra3_pb2.TransformResult()
+
+        # Handle celestial_coords in request.
+        if len(request.celestial_coords) > 0:
+            celestial_coords = []
+            for cc in request.celestial_coords:
+                celestial_coords.append((cc.ra, cc.dec))
+            image_coords = self._tetra3.transform_to_image_coords(
+                celestial_coords, request.image_width, request.image_height, request.fov,
+                rotation_matrix, request.distortion)
+            for ic in image_coords:
+                image_coord = result.image_coords.add()
+                image_coord.y = ic[0]
+                image_coord.x = ic[1]
+
+        # Handle image_coords in request.
+        if len(request.image_coords) > 0:
+            image_coords = []
+            for ic in request.image_coords:
+                image_coords.append((ic.y, ic.x))
+            celestial_coords = self._tetra3.transform_to_celestial_coords(
+                image_coords, request.image_width, request.image_height, request.fov,
+                rotation_matrix, request.distortion)
+            for cc in celestial_coords:
+                celestial_coord = result.celestial_coords.add()
+                celestial_coord.ra = cc[0]
+                celestial_coord.dec = cc[1]
+
+        return result
 
 servicer = None
 
 def signal_handler(sig, frame):
     global servicer
     servicer.CancelSolve()
+    server.stop(1).wait()
 
 def startServer():
     ap = argparse.ArgumentParser(
@@ -206,6 +256,7 @@ def startServer():
     ap.add_argument('filename', help='name of database file in tetra3/data directory')
     args = ap.parse_args()
 
+    global server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     global servicer
     servicer = Tetra3Servicer(args.filename)

@@ -24,6 +24,7 @@ message SolveRequest {
   repeated CelestialCoord target_sky_coords = 14;
   optional float distortion = 10;  // We don't support min/max.
   bool return_matches = 11;
+  bool return_rotation_matrix = 15;
   optional float match_max_error = 12;
 }
 
@@ -60,6 +61,7 @@ message SolveResult {
 
   repeated MatchedStar matched_stars = 13;
   repeated ImageCoord pattern_centroids = 16;
+  optional RotationMatrix rotation_matrix = 17;
 
   // If SolveFromCentroids() fails, all of the SolveResult fields will be
   // omitted except for 'solve_time' and 'status', and the reason for the
@@ -86,7 +88,36 @@ message MatchedStar {
   optional string cat_id = 4;
 }
 
+message RotationMatrix {
+  // 3x3 matrix in row-major order.
+  repeated float matrix_elements = 1;
+};
+
+message TransformRequest {
+  RotationMatrix rotation_matrix = 1;
+  // The 'size' parameter, in pixels.
+  int32 image_width = 2;
+  int32 image_height = 3;
+  // Horizontal field of view, degrees.
+  float fov = 4;
+  // Lens distortion.
+  float distortion = 5;
+
+  repeated CelestialCoord celestial_coords = 6;
+  repeated ImageCoord image_coords = 7;
+}
+
+message TransformResult {
+  repeated ImageCoord image_coords = 1;
+  repeated CelestialCoord celestial_coords = 2;
+}
+
 service Tetra3 {
   // The gRPC deadline is ignored; instead use SolveRequest.solve_timeout.
   rpc SolveFromCentroids(SolveRequest) returns (SolveResult);
+
+  // Transforms request 'celestial_coords', if any, to result 'image_coords', and
+  // request 'image_coords', if any, to result 'celestial_coords' using the
+  // supplied request 'rotation_matrix'.
+  rpc TransformCoordinates(TransformRequest) returns (TransformResult);
 }
