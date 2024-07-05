@@ -251,7 +251,6 @@ servicer = None
 def signal_handler(sig, frame):
     global servicer
     servicer.CancelSolve()
-    server.stop(1).wait()
 
 def startServer():
     ap = argparse.ArgumentParser(
@@ -262,7 +261,6 @@ def startServer():
     ap.add_argument('filename', help='name of database file in tetra3/data directory')
     args = ap.parse_args()
 
-    global server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     global servicer
     servicer = Tetra3Servicer(args.filename)
