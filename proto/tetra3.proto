@@ -44,6 +44,8 @@ message SolveResult {
   optional float fov = 3;
   optional float distortion = 4;
   optional float rmse = 5;
+  optional float p90e = 18;
+  optional float maxe = 19;
   optional int32 matches = 6;
   optional float prob = 7;
   optional float epoch_equinox = 8;

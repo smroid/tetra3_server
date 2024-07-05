@@ -96,6 +96,8 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         fov = result_dict.get('FOV', None)
         distortion = result_dict.get('distortion', None)
         rmse = result_dict.get('RMSE', None)
+        p90e = result_dict.get('P90E', None)
+        maxe = result_dict.get('MAXE', None)
         matches = result_dict.get('Matches', None)
         prob = result_dict.get('Prob', None)
         epoch_equinox = result_dict.get('epoch_equinox', None)
@@ -124,6 +126,10 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
             result.distortion = distortion
         if rmse is not None:
             result.rmse = rmse
+        if p90e is not None:
+            result.p90e = p90e
+        if maxe is not None:
+            result.maxe = maxe
         if matches is not None:
             result.matches = matches
         if prob is not None:
