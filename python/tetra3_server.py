@@ -204,47 +204,6 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
     def CancelSolve(self):
         self._tetra3.cancel_solve()
 
-    def TransformCoordinates(self, request, context):
-        flattened_matrix = request.rotation_matrix.matrix_elements
-        # Convert to 3x3.
-        rotation_matrix = []
-        i = 0
-        for r in range(3):
-            row = []
-            for c in range(3):
-                row.append(flattened_matrix[i])
-                i += 1
-            rotation_matrix.append(row)
-
-        result = tetra3_pb2.TransformResult()
-
-        # Handle celestial_coords in request.
-        if len(request.celestial_coords) > 0:
-            celestial_coords = []
-            for cc in request.celestial_coords:
-                celestial_coords.append((cc.ra, cc.dec))
-            image_coords = self._tetra3.transform_to_image_coords(
-                celestial_coords, request.image_width, request.image_height, request.fov,
-                rotation_matrix, request.distortion)
-            for ic in image_coords:
-                image_coord = result.image_coords.add()
-                image_coord.y = ic[0]
-                image_coord.x = ic[1]
-
-        # Handle image_coords in request.
-        if len(request.image_coords) > 0:
-            image_coords = []
-            for ic in request.image_coords:
-                image_coords.append((ic.y, ic.x))
-            celestial_coords = self._tetra3.transform_to_celestial_coords(
-                image_coords, request.image_width, request.image_height, request.fov,
-                rotation_matrix, request.distortion)
-            for cc in celestial_coords:
-                celestial_coord = result.celestial_coords.add()
-                celestial_coord.ra = cc[0]
-                celestial_coord.dec = cc[1]
-
-        return result
 
 servicer = None
 

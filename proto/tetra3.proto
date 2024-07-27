@@ -95,31 +95,7 @@ message RotationMatrix {
   repeated float matrix_elements = 1;
 };
 
-message TransformRequest {
-  RotationMatrix rotation_matrix = 1;
-  // The 'size' parameter, in pixels.
-  int32 image_width = 2;
-  int32 image_height = 3;
-  // Horizontal field of view, degrees.
-  float fov = 4;
-  // Lens distortion.
-  float distortion = 5;
-
-  repeated CelestialCoord celestial_coords = 6;
-  repeated ImageCoord image_coords = 7;
-}
-
-message TransformResult {
-  repeated ImageCoord image_coords = 1;
-  repeated CelestialCoord celestial_coords = 2;
-}
-
 service Tetra3 {
   // The gRPC deadline is ignored; instead use SolveRequest.solve_timeout.
   rpc SolveFromCentroids(SolveRequest) returns (SolveResult);
-
-  // Transforms request 'celestial_coords', if any, to result 'image_coords', and
-  // request 'image_coords', if any, to result 'celestial_coords' using the
-  // supplied request 'rotation_matrix'.
-  rpc TransformCoordinates(TransformRequest) returns (TransformResult);
 }
