@@ -10,6 +10,7 @@ import "google/protobuf/duration.proto";
 // See documentation for Tetra3's solve_from_centroids() function for a
 // description of the request and response fields.
 
+// Next tag: 17.
 message SolveRequest {
   repeated ImageCoord star_centroids = 1;
   // The 'size' parameter, in pixels.
@@ -24,6 +25,7 @@ message SolveRequest {
   repeated CelestialCoord target_sky_coords = 14;
   optional double distortion = 10;  // We don't support min/max.
   bool return_matches = 11;
+  bool return_catalog = 16;
   bool return_rotation_matrix = 15;
   optional double match_max_error = 12;
 }
@@ -38,6 +40,7 @@ enum SolveStatus {
   TOO_FEW = 5;  // Too few 'star_centroids' were supplied so matching was not attempted.
 }
 
+// Next tag: 21.
 message SolveResult {
   optional CelestialCoord image_center_coords = 1;
   optional double roll = 2;
@@ -62,6 +65,8 @@ message SolveResult {
   repeated ImageCoord target_sky_to_image_coords = 15;
 
   repeated MatchedStar matched_stars = 13;
+  repeated MatchedStar catalog_stars = 20;  // `cat_id` omitted.
+
   repeated ImageCoord pattern_centroids = 16;
   optional RotationMatrix rotation_matrix = 17;
 

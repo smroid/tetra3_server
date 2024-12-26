@@ -11,6 +11,8 @@ HEIGHT=768
 DISTORTION=0
 FOV=11
 
+# Elsewhere, start up tetra3_server:
+#   python tetra3_server.py default_database.npz
 def main():
     ap = argparse.ArgumentParser(description='Test gRPC client exercise plate-solver')
     ap.add_argument('-a', '--address', default='unix:///tmp/cedar.sock',
@@ -46,6 +48,8 @@ def main():
     solve_req.distortion = DISTORTION
     solve_req.fov_estimate = FOV
     # solve_req.match_max_error = 0.005
+    # solve_req.return_matches = True
+    # solve_req.return_catalog = True
     solve_req.return_rotation_matrix = True
 
     server_address = args.address
@@ -64,27 +68,6 @@ def main():
         rpc_overhead = elapsed - solve_time
         print('Time total=solve+RPC %.2f=%.2f+%.2f ms' %
               (elapsed * 1000, solve_time * 1000, rpc_overhead * 1000))
-
-        # Play with functions to transform between image coordinates and celestial coordinates
-        # based on a plate solution.
-        transform_req = tetra3_pb2.TransformRequest()
-        transform_req.rotation_matrix.matrix_elements.extend(solve_response.rotation_matrix.matrix_elements)
-        transform_req.image_width = WIDTH
-        transform_req.image_height = HEIGHT
-        transform_req.distortion = 0.1
-        transform_req.fov = FOV
-        image_coords = transform_req.image_coords.add()
-        image_coords.x = 10
-        image_coords.y = 20
-        transform_response = stub.TransformCoordinates(transform_req)
-        print('Transform reponse: %s' % transform_response)
-
-        # Now transform back to image coords.
-        celestial_coords = transform_req.celestial_coords.add()
-        celestial_coords.ra = transform_response.celestial_coords[0].ra
-        celestial_coords.dec = transform_response.celestial_coords[0].dec
-        transform_response = stub.TransformCoordinates(transform_req)
-        print('Transform reponse: %s' % transform_response)
 
 
 if __name__ == "__main__":

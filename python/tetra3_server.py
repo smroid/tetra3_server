@@ -66,6 +66,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
             distortion = request.distortion
 
         return_matches = request.return_matches
+        return_catalog = request.return_catalog
         return_rotation_matrix = request.return_rotation_matrix
 
         match_max_error = None
@@ -84,6 +85,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
             target_sky_coord=target_sky_coord,
             distortion=distortion,
             return_matches=return_matches,
+            return_catalog=return_catalog,
             return_visual=False,
             return_rotation_matrix=return_rotation_matrix,
             match_max_error=match_max_error)
@@ -108,6 +110,7 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
         x_list = result_dict.get('x_target', None)
         y_list = result_dict.get('y_target', None)
         matched_stars_list = result_dict.get('matched_stars', None)
+        catalog_stars_list = result_dict.get('catalog_stars', None)
         matched_centroids_list = result_dict.get('matched_centroids', None)
         pattern_centroids_list = result_dict.get('pattern_centroids', None)
         matched_cat_id_list = result_dict.get('matched_catID', None)
@@ -181,6 +184,15 @@ class Tetra3Servicer(tetra3_pb2_grpc.Tetra3Servicer):
                 matched_star.image_coord.x = matched_centroids_list[i][1]
                 if matched_cat_id_list is not None:
                     matched_star.cat_id = '%s' % matched_cat_id_list[i]
+        if catalog_stars_list is not None:
+            # (RA, Dec, magnitude, y, x).
+            for catalog_star_tuple in catalog_stars_list:
+                catalog_star = result.catalog_stars.add()
+                catalog_star.celestial_coord.ra = catalog_star_tuple[0]
+                catalog_star.celestial_coord.dec = catalog_star_tuple[1]
+                catalog_star.magnitude = catalog_star_tuple[2]
+                catalog_star.image_coord.y = catalog_star_tuple[3]
+                catalog_star.image_coord.x = catalog_star_tuple[4]
         if pattern_centroids_list is not None:
             for i in range(len(pattern_centroids_list)):
                 pattern_centroid = result.pattern_centroids.add()
