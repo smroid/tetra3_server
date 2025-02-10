@@ -1,0 +1,18 @@
+[package]
+name = "tetra3_server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+canonical-error = "0.1.0"
+cedar-elements = { version = "0.1.0", path = "../cedar-server/elements" }
+log = "0.4.25"
+prost = "0.12.3"
+prost-types = "0.12.3"
+tokio = "1.41.0"
+tonic = "0.11"
+tower = { version = "0.4.13", features = ["full"] }
+
+[build-dependencies]
+tonic-build = "0.11"
+prost-build = "0.12.3"

@@ -54,7 +54,6 @@ message SolveResult {
   optional double epoch_equinox = 8;
   optional double epoch_proper_motion = 9;
   google.protobuf.Duration solve_time = 10;
-  optional double cache_hit_fraction = 11;
 
   // Celestial coordinates of SolveRequest.target_pixels.
   repeated CelestialCoord target_coords = 12;
@@ -74,6 +73,8 @@ message SolveResult {
   // omitted except for 'solve_time' and 'status', and the reason for the
   // failure will be given here.
   optional SolveStatus status = 14;
+
+  reserved 11;
 }
 
 // A location in full resolution image coordinates. (0.5, 0.5) corresponds to
