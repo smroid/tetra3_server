@@ -19,7 +19,7 @@ use canonical_error::{CanonicalError, failed_precondition_error};
 //   to info!/warn! logs.
 // * If the subprocess unexpectedly exits, log to error! and re-start
 //   the subprocess.
-// * We install a ^C handler, and ensure that the subprocess is killed
+// * We accept a ^C handler, and ensure that the subprocess is killed
 //   before we exit.
 
 pub struct Tetra3Subprocess {
@@ -145,6 +145,7 @@ impl Tetra3Subprocess {
     }
 
     // Assumes PYPATH is properly set up.
+    // got_signal: set to true by the application's ^C hook.
     pub fn new(tetra3_script_path: impl AsRef<OsStr>,
                tetra3_database: impl AsRef<OsStr>,
                got_signal: Arc<AtomicBool>) -> Result<Self, CanonicalError> {
@@ -167,9 +168,9 @@ impl Tetra3Subprocess {
 
     // tetra3_server.py traps SIGINT and uses this to cancel the in-progress
     // solve.
-    // pub fn send_interrupt_signal(&mut self) {
-    //     self.send_signal("INT");
-    // }
+    pub fn send_interrupt_signal(&mut self) {
+        self.send_signal("INT");
+    }
 
     pub fn stop(&mut self) {
         *self.stopping.lock().unwrap() = true;

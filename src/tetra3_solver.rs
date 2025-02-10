@@ -46,11 +46,7 @@ impl Tetra3Solver {
         let tetra3_subprocess = Arc::new(Mutex::new(
             Tetra3Subprocess::new(
                 tetra3_script, database_path, got_signal.clone()).unwrap()));
-        // TODO: cancel method that calls send_interrupt_signal() in
-        // tetra3_subprocess
-
-        let tetra3_socket = "/tmp/cedar.sock".to_string();
-        let client = Self::connect(tetra3_socket).await?;
+        let client = Self::connect("/tmp/cedar.sock".to_string()).await?;
 
         Ok(Tetra3Solver{tetra3_subprocess,
                         client: Arc::new(tokio::sync::Mutex::new(client))})
@@ -128,10 +124,12 @@ impl SolverTrait for Tetra3Solver {
         }
         solve_request.match_radius = params.match_radius;
         solve_request.match_threshold = params.match_threshold;
-        if let Some(solve_timeout) = params.solve_timeout {
-            solve_request.solve_timeout =
-                Some(prost_types::Duration::try_from(solve_timeout).unwrap());
-        }
+
+        let solve_timeout: Duration = params.solve_timeout.unwrap_or(
+            self.default_timeout());
+        solve_request.solve_timeout =
+            Some(prost_types::Duration::try_from(solve_timeout).unwrap());
+
         if let Some(tp_vec) = &extension.target_pixel {
             for tp in tp_vec {
                 solve_request.target_pixels.push(
@@ -218,5 +216,13 @@ impl SolverTrait for Tetra3Solver {
         }
 
         Ok(plate_solution)
+    }
+
+    fn cancel(&self) {
+        self.tetra3_subprocess.lock().unwrap().send_interrupt_signal();
+    }
+
+    fn default_timeout(&self) -> Duration {
+        return Duration::from_secs(5);
     }
 }
