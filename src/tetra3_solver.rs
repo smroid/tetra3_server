@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use canonical_error::{CanonicalError, failed_precondition_error};
 
+use log::info;
 use tonic::async_trait;
 use tonic::transport::{Endpoint, Uri};
 use tokio::net::UnixStream;
@@ -43,6 +44,8 @@ impl Tetra3Solver {
     pub async fn new(tetra3_script: &str,
                      database_path: &str,
                      got_signal: Arc<AtomicBool>) -> Result<Self, CanonicalError> {
+        info!("Using Tetra3 server {:?} listening at {:?}",
+              tetra3_script, "/tmp/cedar.sock");
         let tetra3_subprocess = Arc::new(Mutex::new(
             Tetra3Subprocess::new(
                 tetra3_script, database_path, got_signal.clone()).unwrap()));
