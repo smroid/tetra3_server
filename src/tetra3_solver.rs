@@ -222,7 +222,5 @@ impl SolverTrait for Tetra3Solver {
         self.tetra3_subprocess.lock().unwrap().send_interrupt_signal();
     }
 
-    fn default_timeout(&self) -> Duration {
-        return Duration::from_secs(5);
-    }
+    fn default_timeout(&self) -> Duration { Duration::from_secs(5) }
 }
