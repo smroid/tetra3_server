@@ -21,7 +21,7 @@ use crate::tetra3_subprocess::Tetra3Subprocess;
 
 use crate::tetra3_server::{CelestialCoord as TetraCelestialCoord,
                            ImageCoord as TetraImageCoord, SolveRequest,
-                           SolveResult};
+                           SolveResult, SolveStatus};
 
 // Tetra3Solver is a Rust wrapper to the Cedar-solve (Python) based
 // implementation of SolverTrait. Runs the Python code in a subprocess
@@ -151,6 +151,11 @@ impl SolverTrait for Tetra3Solver {
         solve_request.match_max_error = params.match_max_error;
 
         let tetra_solve_result = self.solve_with_client(solve_request).await?;
+        if tetra_solve_result.status != Some(SolveStatus::MatchFound.into()) {
+            return Err(failed_precondition_error(format!(
+                "Tetra server returned error status {:?}",
+                tetra_solve_result.status).as_str()));
+        }
 
         // Convert Tetra3 SolveResult into Cedar's PlateSolution proto.
         let mut plate_solution =
