@@ -107,8 +107,7 @@ impl SolverTrait for Tetra3Solver {
                                   star_centroids: &Vec<ImageCoord>,
                                   width: usize, height: usize,
                                   extension: &SolveExtension,
-                                  params: &SolveParams,
-                                  _cancel: Option<Arc<AtomicBool>>)
+                                  params: &SolveParams)
                                   -> Result<PlateSolution, CanonicalError> {
         let mut solve_request = SolveRequest::default();
 
