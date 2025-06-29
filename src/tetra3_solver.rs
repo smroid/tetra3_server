@@ -90,11 +90,11 @@ impl Tetra3Solver {
         -> Result<SolveResult, CanonicalError> {
         match self.client.lock().await.solve_from_centroids(solve_request).await {
             Ok(response) => {
-                return Ok(response.into_inner());
+                Ok(response.into_inner())
             },
             Err(e) => {
-                return Err(failed_precondition_error(
-                    format!("Error invoking plate solver: {:?}", e).as_str()));
+                Err(failed_precondition_error(
+                    format!("Error invoking plate solver: {:?}", e).as_str()))
             },
         }
     }
@@ -107,7 +107,7 @@ impl Tetra3Solver {
 #[async_trait]
 impl SolverTrait for Tetra3Solver {
     async fn solve_from_centroids(&self,
-                                  star_centroids: &Vec<ImageCoord>,
+                                  star_centroids: &[ImageCoord],
                                   width: usize, height: usize,
                                   extension: &SolveExtension,
                                   params: &SolveParams)

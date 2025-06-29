@@ -46,8 +46,8 @@ impl Tetra3Subprocess {
             .stderr(Stdio::piped())
             .spawn() {
                 Err(e) => {
-                    return Err(failed_precondition_error(
-                        format!("Command::spawn error: {:?}", e).as_str()));
+                    Err(failed_precondition_error(
+                        format!("Command::spawn error: {:?}", e).as_str()))
                 },
                 Ok(mut child) => {
                     // We've sucessfully spawned the subprocess, but we're not
