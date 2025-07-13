@@ -5,6 +5,9 @@ package tetra3_server;
 import "google/protobuf/duration.proto";
 
 // In 'python' dir:
+// First: make sure you've invoked the virtual environment in cedar-solve:
+// source <path>/cedar-solve/.cedar_venv/bin/activate
+// Then:
 // python -m grpc_tools.protoc -I../proto --python_out=. --pyi_out=. --grpc_python_out=. ../proto/tetra3.proto
 
 // See documentation for Tetra3's solve_from_centroids() function for a
