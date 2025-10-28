@@ -15,6 +15,7 @@ use tower::service_fn;
 
 use cedar_elements::cedar::{ImageCoord, PlateSolution, StarInfo};
 use cedar_elements::cedar_common::CelestialCoord;
+use cedar_elements::imu_trait::EquatorialCoordinates;
 use cedar_elements::solver_trait::{SolveExtension, SolveParams, SolverTrait};
 
 use crate::tetra3_server::tetra3_client::Tetra3Client;
@@ -110,7 +111,8 @@ impl SolverTrait for Tetra3Solver {
                                   star_centroids: &[ImageCoord],
                                   width: usize, height: usize,
                                   extension: &SolveExtension,
-                                  params: &SolveParams)
+                                  params: &SolveParams,
+                                  _imu_estimate: Option<EquatorialCoordinates>)
                                   -> Result<PlateSolution, CanonicalError> {
         let mut solve_request = SolveRequest::default();
 
